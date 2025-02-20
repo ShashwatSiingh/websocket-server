@@ -31,9 +31,67 @@ migrate_working_dir/
 .flutter-plugins-dependencies
 .pub-cache/
 .pub/
-/build/
+build/
+**/build/
 
-# Symbolication related
+# Android related
+**/android/**/gradle-wrapper.jar
+.gradle/
+**/android/captures/
+**/android/gradlew
+**/android/gradlew.bat
+**/android/local.properties
+**/android/**/GeneratedPluginRegistrant.java
+**/android/key.properties
+**/*.keystore
+**/*.jks
+**/android/**/.cxx/
+**/android/app/.cxx/
+
+# iOS/XCode related
+**/ios/**/*.mode1v3
+**/ios/**/*.mode2v3
+**/ios/**/*.moved-aside
+**/ios/**/*.pbxuser
+**/ios/**/*.perspectivev3
+**/ios/**/*sync/
+**/ios/**/.sconsign.dblite
+**/ios/**/.tags*
+**/ios/**/.vagrant/
+**/ios/**/DerivedData/
+**/ios/**/Icon?
+**/ios/**/Pods/
+**/ios/**/.symlinks/
+**/ios/**/profile
+**/ios/**/xcuserdata
+**/ios/.generated/
+**/ios/Flutter/.last_build_id
+**/ios/Flutter/App.framework
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/ephemeral
+**/ios/Flutter/app.flx
+**/ios/Flutter/app.zip
+**/ios/Flutter/flutter_assets/
+**/ios/Flutter/flutter_export_environment.sh
+**/ios/ServiceDefinitions.json
+**/ios/Runner/GeneratedPluginRegistrant.*
+
+# macOS related
+**/macos/Flutter/GeneratedPluginRegistrant.*
+**/macos/Flutter/ephemeral
+
+# Windows related
+**/windows/flutter/generated_plugin_registrant.*
+
+# Linux related
+**/linux/flutter/generated_plugin_registrant.*
+
+# Coverage
+coverage/
+
+# Symbols
 app.*.symbols
 
 # Obfuscation related
@@ -54,15 +112,14 @@ node_modules/
 
 # Environment files
 .env
-**/.env
-.env.local
-.env.*.local
+.env.*
+!.env.example
 
 # Logs
 *.log
 npm-debug.log*
 
-# OS files
+# System files
 .DS_Store
 .DS_Store?
 ._*

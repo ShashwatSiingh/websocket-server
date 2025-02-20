@@ -1,82 +1,69 @@
-import Fastify from 'fastify';
-import fastifyWs from '@fastify/websocket';
-import dotenv from 'dotenv';
+const express = require('express');
+const WebSocket = require('ws');
+const dotenv = require('dotenv');
+const { handleIncomingCall } = require('./services/call_handler_service');
 
 // Load environment variables
 dotenv.config();
 
-const PORT = process.env.PORT || 5050;
+const app = express();
+const port = process.env.PORT || 3000;
 
-const start = async () => {
+// Create WebSocket server
+const wss = new WebSocket.Server({ port: process.env.WS_PORT || 8080 });
+
+// WebSocket connection handling
+wss.on('connection', (ws) => {
+  console.log('New client connected');
+
+  // Send initial connection message
+  ws.send(JSON.stringify({ type: 'connection', status: 'connected' }));
+
+  // Handle incoming messages
+  ws.on('message', async (message) => {
     try {
-        const fastify = Fastify({
-            logger: true
-        });
+      const data = JSON.parse(message);
 
-        // Register WebSocket plugin
-        await fastify.register(fastifyWs);
+      switch (data.type) {
+        case 'incoming_call':
+          await handleIncomingCall(data, ws);
+          break;
 
-        // Basic health check route
-        fastify.get('/', (request, reply) => {
-            fastify.log.info('Health check requested');
-            return { status: 'Server is running' };
-        });
+        // Add other message type handlers here
 
-        // WebSocket route
-        fastify.get('/exotel-stream', { websocket: true }, (connection, req) => {
-            fastify.log.info('WebSocket connection attempt', {
-                userAgent: req.headers['user-agent'],
-                headers: req.headers
-            });
-
-            connection.socket.on('message', message => {
-                fastify.log.info('Received message:', message.toString());
-                // Echo the message back
-                connection.socket.send(message.toString());
-            });
-
-            connection.socket.on('close', () => {
-                fastify.log.info('Client disconnected');
-            });
-
-            connection.socket.on('error', (error) => {
-                fastify.log.error('WebSocket error:', error);
-            });
-
-            // Send a welcome message
-            try {
-                const welcomeMessage = JSON.stringify({
-                    type: 'welcome',
-                    message: 'Connected to WebSocket server'
-                });
-                fastify.log.info('Sending welcome message:', welcomeMessage);
-                connection.socket.send(welcomeMessage);
-            } catch (error) {
-                fastify.log.error('Error sending welcome message:', error);
-            }
-        });
-
-        // Add error handler
-        fastify.setErrorHandler((error, request, reply) => {
-            fastify.log.error('Server error:', error);
-            reply.status(500).send({ error: 'Internal Server Error' });
-        });
-
-        // Start the server
-        await fastify.listen({
-            port: PORT,
-            host: '0.0.0.0'
-        });
-
-        fastify.log.info(`Server running at http://localhost:${PORT}`);
-        fastify.log.info(`WebSocket endpoint available at ws://localhost:${PORT}/exotel-stream`);
-        fastify.log.info('Registered routes:', fastify.printRoutes());
-
-    } catch (err) {
-        console.error('Error starting server:', err);
-        process.exit(1);
+        default:
+          ws.send(JSON.stringify({
+            type: 'error',
+            message: 'Unknown message type'
+          }));
+      }
+    } catch (error) {
+      console.error('Error processing message:', error);
+      ws.send(JSON.stringify({
+        type: 'error',
+        message: 'Error processing message'
+      }));
     }
-};
+  });
 
-// Start the server
-start();
+  // Handle client disconnection
+  ws.on('close', () => {
+    console.log('Client disconnected');
+  });
+
+  // Handle errors
+  ws.on('error', (error) => {
+    console.error('WebSocket error:', error);
+  });
+});
+
+// Express routes
+app.get('/health', (req, res) => {
+  res.json({ status: 'healthy' });
+});
+
+// Start Express server
+app.listen(port, () => {
+  console.log(`Express server running on port ${port}`);
+  console.log(`WebSocket server running on port ${process.env.WS_PORT || 8080}`);
+});

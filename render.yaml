@@ -1,14 +1,16 @@
 services:
   - type: web
     name: websocket-server
-    runtime: node
-    plan: free
+    env: node
     buildCommand: cd server && npm install
     startCommand: cd server && node index.js
     envVars:
       - key: NODE_ENV
         value: production
       - key: PORT
-        value: 5050
+        value: 3000
+      - key: WS_PORT
+        value: 8080
+      # Add other environment variables as needed
     healthCheckPath: /
     autoDeploy: true
