@@ -2,16 +2,21 @@ services:
   - type: web
     name: websocket-server
     runtime: node
-    buildCommand: |
-      cd server
-      rm -rf node_modules package-lock.json
-      npm install
+    buildCommand: cd server && npm install
     startCommand: cd server && npm start
     envVars:
       - key: NODE_ENV
         value: production
       - key: PORT
         value: 10000
+      - key: WS_PORT
+        value: 8080
       - key: FORWARD_TO_NUMBER
-        value: +918825190385
+        value: "+918825190385"
+      - key: EXOTEL_CALLER_ID
+        value: "09513886363"
+      - key: EXOTEL_APP_ID
+        value: "903415"
+      - key: SERVER_URL
+        value: "https://websocket-server-tq7k.onrender.com"
     healthCheckPath: /health
