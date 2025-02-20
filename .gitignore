@@ -35,6 +35,7 @@ build/
 **/build/
 
 # Android related
+android/
 **/android/**/gradle-wrapper.jar
 .gradle/
 **/android/captures/
@@ -46,9 +47,9 @@ build/
 **/*.keystore
 **/*.jks
 **/android/**/.cxx/
-**/android/app/.cxx/
 
 # iOS/XCode related
+ios/
 **/ios/**/*.mode1v3
 **/ios/**/*.mode2v3
 **/ios/**/*.moved-aside
@@ -78,40 +79,25 @@ build/
 **/ios/ServiceDefinitions.json
 **/ios/Runner/GeneratedPluginRegistrant.*
 
-# macOS related
-**/macos/Flutter/GeneratedPluginRegistrant.*
-**/macos/Flutter/ephemeral
+# Windows/Linux/MacOS
+windows/
+linux/
+macos/
 
-# Windows related
-**/windows/flutter/generated_plugin_registrant.*
+# IDE and editor files
+.idea/
+.vscode/
+*.iml
+.metadata
 
-# Linux related
-**/linux/flutter/generated_plugin_registrant.*
-
-# Coverage
-coverage/
-
-# Symbols
-app.*.symbols
-
-# Obfuscation related
-app.*.map.json
-
-# Android Studio will place build artifacts here
-/android/app/debug
-/android/app/profile
-/android/app/release
-
-# Server
-server/node_modules
-server/.env
-
-# Dependencies
-node_modules/
+# Build and dependency directories
+**/build/
+**/dist/
 **/node_modules/
 
 # Environment files
 .env
+**/.env
 .env.*
 !.env.example
 

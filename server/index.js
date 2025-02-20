@@ -1,7 +1,8 @@
 const express = require('express');
 const WebSocket = require('ws');
 const dotenv = require('dotenv');
-const { handleIncomingCall } = require('./services/call_handler_service');
+const bodyParser = require('body-parser');
+const { handleIncomingCall, handleExotelWebhook } = require('./services/call_handler_service');
 
 // Load environment variables
 dotenv.config();
@@ -9,46 +10,31 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT || 3000;
 
+// Middleware
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+
 // Create WebSocket server
 const wss = new WebSocket.Server({ port: process.env.WS_PORT || 8080 });
+
+// Store connected clients
+const clients = new Map();
 
 // WebSocket connection handling
 wss.on('connection', (ws) => {
   console.log('New client connected');
 
+  // Store client connection
+  const clientId = Date.now();
+  clients.set(clientId, ws);
+
   // Send initial connection message
   ws.send(JSON.stringify({ type: 'connection', status: 'connected' }));
-
-  // Handle incoming messages
-  ws.on('message', async (message) => {
-    try {
-      const data = JSON.parse(message);
-
-      switch (data.type) {
-        case 'incoming_call':
-          await handleIncomingCall(data, ws);
-          break;
-
-        // Add other message type handlers here
-
-        default:
-          ws.send(JSON.stringify({
-            type: 'error',
-            message: 'Unknown message type'
-          }));
-      }
-    } catch (error) {
-      console.error('Error processing message:', error);
-      ws.send(JSON.stringify({
-        type: 'error',
-        message: 'Error processing message'
-      }));
-    }
-  });
 
   // Handle client disconnection
   ws.on('close', () => {
     console.log('Client disconnected');
+    clients.delete(clientId);
   });
 
   // Handle errors
@@ -57,9 +43,29 @@ wss.on('connection', (ws) => {
   });
 });
 
-// Express routes
+// Exotel webhook endpoint
+app.post('/exotel/webhook', async (req, res) => {
+  try {
+    const webhookData = req.body;
+    console.log('Received Exotel webhook:', webhookData);
+
+    // Handle webhook and broadcast to relevant clients
+    await handleExotelWebhook(webhookData, clients);
+
+    res.status(200).json({ status: 'success' });
+  } catch (error) {
+    console.error('Error handling Exotel webhook:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Health check endpoint
 app.get('/health', (req, res) => {
-  res.json({ status: 'healthy' });
+  res.json({
+    status: 'healthy',
+    service: process.env.SERVICE_NAME || 'primary',
+    timestamp: new Date().toISOString()
+  });
 });
 
 // Start Express server
