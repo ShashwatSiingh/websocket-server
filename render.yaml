@@ -2,7 +2,10 @@ services:
   - type: web
     name: websocket-server
     runtime: node
-    buildCommand: cd server && npm install
+    buildCommand: |
+      cd server
+      rm -rf node_modules package-lock.json
+      npm install
     startCommand: cd server && npm start
     envVars:
       - key: NODE_ENV
