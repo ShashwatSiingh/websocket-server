@@ -1,18 +1,17 @@
 {
   "name": "websocket-server",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "WebSocket server for handling calls",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "dev": "nodemon index.js"
+    "test": "node test.js"
   },
   "dependencies": {
-    "express": "^4.18.2",
-    "ws": "^8.13.0",
-    "dotenv": "^16.3.1",
     "axios": "^1.6.0",
-    "body-parser": "^1.20.2"
+    "body-parser": "^1.20.2",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"

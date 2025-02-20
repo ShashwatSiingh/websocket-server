@@ -1,40 +1,17 @@
 services:
-  # Primary service
   - type: web
-    name: websocket-server-primary
-    env: node
-    buildCommand: cd server && npm install
+    name: websocket-server
+    runtime: node
+    buildCommand: |
+      cd server
+      rm -rf node_modules package-lock.json
+      npm install
     startCommand: cd server && npm start
     envVars:
       - key: NODE_ENV
         value: production
       - key: PORT
-        value: 3000
-      - key: WS_PORT
-        value: 8080
-      - key: SERVER_URL
-        value: https://websocket-server-tq7k.onrender.com
-      - key: SERVICE_NAME
-        value: primary
+        value: 10000
+      - key: FORWARD_TO_NUMBER
+        value: +918825190385
     healthCheckPath: /health
-    autoDeploy: true
-
-  # Fallback service
-  - type: web
-    name: websocket-server-fallback
-    env: node
-    buildCommand: cd server && npm install
-    startCommand: cd server && npm start
-    envVars:
-      - key: NODE_ENV
-        value: production
-      - key: PORT
-        value: 3000
-      - key: WS_PORT
-        value: 8080
-      - key: SERVER_URL
-        value: https://websocket-server-fallback-tq7k.onrender.com
-      - key: SERVICE_NAME
-        value: fallback
-    healthCheckPath: /health
-    autoDeploy: true

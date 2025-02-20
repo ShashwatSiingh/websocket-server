@@ -1,6 +1,4 @@
-const axios = require('axios');
-
-const EXOTEL_API_BASE = `https://${process.env.EXOTEL_SID}:${process.env.EXOTEL_TOKEN}@${process.env.EXOTEL_SUBDOMAIN}.exotel.com/v1/Accounts/${process.env.EXOTEL_SID}`;
+const exotelService = require('./exotel_service');
 
 const handleIncomingCall = async (data, ws) => {
   try {
@@ -10,25 +8,17 @@ const handleIncomingCall = async (data, ws) => {
     // Log incoming call
     console.log(`Incoming ${callType} call from ${callerId} to ${recipientId}`);
 
-    // Initiate call via Exotel API
-    const response = await axios.post(`${EXOTEL_API_BASE}/Calls/connect`, {
-      From: callerId,
-      To: recipientId,
-      CallerId: process.env.EXOTEL_CALLER_ID,
-      CallType: 'trans',
-      StatusCallback: `${process.env.SERVER_URL}/exotel/webhook`
-    });
+    // Initiate call via Exotel
+    const callResponse = await exotelService.initiateCall(callerId, recipientId);
 
-    console.log('Exotel call initiated:', response.data);
-
-    // Send call notification to client
+    // Send call initiated notification
     ws.send(JSON.stringify({
       type: 'call_initiated',
       data: {
         callerId,
         recipientId,
         callType,
-        callSid: response.data.Call.Sid,
+        callSid: callResponse.Call.Sid,
         timestamp: new Date().toISOString()
       }
     }));
@@ -55,21 +45,31 @@ const handleIncomingCall = async (data, ws) => {
 };
 
 const handleExotelWebhook = async (webhookData, clients) => {
-  const { CallSid, CallStatus, From, To } = webhookData;
+  try {
+    const { CallSid, CallStatus, From, To } = webhookData;
+    console.log('Exotel webhook received:', webhookData);
 
-  // Broadcast call status to all connected clients
-  clients.forEach((ws) => {
-    ws.send(JSON.stringify({
-      type: 'call_status_update',
-      data: {
-        callSid: CallSid,
-        status: CallStatus,
-        from: From,
-        to: To,
-        timestamp: new Date().toISOString()
-      }
-    }));
-  });
+    // Get detailed call status
+    const callDetails = await exotelService.getCallStatus(CallSid);
+
+    // Broadcast to all connected clients
+    clients.forEach((ws) => {
+      ws.send(JSON.stringify({
+        type: 'call_status_update',
+        data: {
+          callSid: CallSid,
+          status: CallStatus,
+          from: From,
+          to: To,
+          details: callDetails,
+          timestamp: new Date().toISOString()
+        }
+      }));
+    });
+
+  } catch (error) {
+    console.error('Error handling Exotel webhook:', error);
+  }
 };
 
 module.exports = {

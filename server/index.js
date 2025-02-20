@@ -1,75 +1,90 @@
 const express = require('express');
-const WebSocket = require('ws');
 const dotenv = require('dotenv');
 const bodyParser = require('body-parser');
-const { handleIncomingCall, handleExotelWebhook } = require('./services/call_handler_service');
 
 // Load environment variables
 dotenv.config();
 
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 10000;
+const VERSION = '1.0.2';
 
 // Middleware
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
-// Create WebSocket server
-const wss = new WebSocket.Server({ port: process.env.WS_PORT || 8080 });
-
-// Store connected clients
-const clients = new Map();
-
-// WebSocket connection handling
-wss.on('connection', (ws) => {
-  console.log('New client connected');
-
-  // Store client connection
-  const clientId = Date.now();
-  clients.set(clientId, ws);
-
-  // Send initial connection message
-  ws.send(JSON.stringify({ type: 'connection', status: 'connected' }));
-
-  // Handle client disconnection
-  ws.on('close', () => {
-    console.log('Client disconnected');
-    clients.delete(clientId);
-  });
-
-  // Handle errors
-  ws.on('error', (error) => {
-    console.error('WebSocket error:', error);
-  });
+// Request logging
+app.use((req, res, next) => {
+    console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
+    next();
 });
 
-// Exotel webhook endpoint
-app.post('/exotel/webhook', async (req, res) => {
-  try {
-    const webhookData = req.body;
-    console.log('Received Exotel webhook:', webhookData);
+// Define all routes
+const routes = {
+    // Test routes
+    'GET /': (req, res) => res.send('Server is running'),
+    'GET /ping': (req, res) => res.send('pong'),
+    'GET /health': (req, res) => res.json({
+        status: 'healthy',
+        version: VERSION,
+        timestamp: new Date().toISOString()
+    }),
+    'GET /test-exoml': (req, res) => {
+        const response = `<?xml version="1.0" encoding="UTF-8"?>
+            <Response>
+                <Say>Test response from version ${VERSION}</Say>
+            </Response>`;
+        res.type('application/xml').send(response);
+    },
+    'POST /exotel/incoming': (req, res) => {
+        console.log('Call received:', req.body);
+        const response = `<?xml version="1.0" encoding="UTF-8"?>
+            <Response>
+                <Say>Connecting your call</Say>
+                <Dial>${process.env.FORWARD_TO_NUMBER}</Dial>
+            </Response>`;
+        res.type('application/xml').send(response);
+    }
+};
 
-    // Handle webhook and broadcast to relevant clients
-    await handleExotelWebhook(webhookData, clients);
-
-    res.status(200).json({ status: 'success' });
-  } catch (error) {
-    console.error('Error handling Exotel webhook:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
+// Register all routes
+Object.entries(routes).forEach(([route, handler]) => {
+    const [method, path] = route.split(' ');
+    app[method.toLowerCase()](path, handler);
 });
 
-// Health check endpoint
-app.get('/health', (req, res) => {
-  res.json({
-    status: 'healthy',
-    service: process.env.SERVICE_NAME || 'primary',
-    timestamp: new Date().toISOString()
-  });
+// Error handler
+app.use((err, req, res, next) => {
+    const errorResponse = {
+        error: 'Server error',
+        message: err.message,
+        path: req.path,
+        method: req.method,
+        version: VERSION
+    };
+    console.error('Error:', errorResponse);
+    res.status(500).json(errorResponse);
 });
 
-// Start Express server
-app.listen(port, () => {
-  console.log(`Express server running on port ${port}`);
-  console.log(`WebSocket server running on port ${process.env.WS_PORT || 8080}`);
+// 404 handler
+app.use((req, res) => {
+    const notFoundResponse = {
+        error: 'Not found',
+        path: req.path,
+        method: req.method,
+        version: VERSION,
+        availableRoutes: Object.keys(routes)
+    };
+    res.status(404).json(notFoundResponse);
+});
+
+// Start server
+app.listen(port, '0.0.0.0', () => {
+    console.log(`Server v${VERSION} running on port ${port}`);
+    console.log('Routes registered:', Object.keys(routes));
+    console.log('Environment:', {
+        NODE_ENV: process.env.NODE_ENV,
+        PORT: port,
+        hasForwardNumber: !!process.env.FORWARD_TO_NUMBER
+    });
 });
