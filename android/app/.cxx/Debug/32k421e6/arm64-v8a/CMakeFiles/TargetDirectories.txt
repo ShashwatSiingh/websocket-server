@@ -1,0 +1,2 @@
+/Users/shashwatsingh/Downloads/MyApp/firstdemoapp/android/app/.cxx/Debug/32k421e6/arm64-v8a/CMakeFiles/edit_cache.dir
+/Users/shashwatsingh/Downloads/MyApp/firstdemoapp/android/app/.cxx/Debug/32k421e6/arm64-v8a/CMakeFiles/rebuild_cache.dir

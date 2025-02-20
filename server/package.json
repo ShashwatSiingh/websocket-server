@@ -1,0 +1,30 @@
+{
+  "name": "ai-call-server",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node index.js"
+  },
+  "dependencies": {
+    "@fastify/formbody": "7.4.0",
+    "@fastify/websocket": "^8.2.0",
+    "axios": "^1.6.7",
+    "dotenv": "16.4.5",
+    "fastify": "^4.29.0",
+    "ws": "^8.18.0",
+    "pino-pretty": "^10.3.1"
+  },
+  "devDependencies": {
+    "pino-pretty": "^10.3.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "overrides": {
+    "semver": "^7.5.4",
+    "json-schema": "^0.4.0",
+    "word-wrap": "^1.2.5",
+    "ws": "^8.18.0"
+  }
+}

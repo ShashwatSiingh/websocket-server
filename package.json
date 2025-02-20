@@ -1,0 +1,19 @@
+{
+  "name": "websocket-server-project",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "server",
+    "websocket-test"
+  ],
+  "scripts": {
+    "start:server": "cd server && npm start",
+    "start:test": "cd websocket-test && npm start",
+    "install:all": "npm install && npm run install:server && npm run install:test",
+    "install:server": "cd server && npm install",
+    "install:test": "cd websocket-test && npm install"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
